@@ -38,7 +38,7 @@ void renderScene(void) {
 	glEnd();
 
 
-	glutSwapBuffers();
+	glutSwapBuffers();qwu difftimeVEOFT987wv6b 8
 }
 
 void init_openGL()
