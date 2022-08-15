@@ -19,26 +19,39 @@ void changeSize(int w, int h) {
 }
 
 
+GLfloat vert[] = {
+	0, 0, 0,
+	0, 1, 0,
+	1, 1, 0,
+	1, 0, 0
+};
+//GLfloat colors[] = { 1, 0, 0, 0,1, 0, 0, 0, 1, 1, 1, 0 };
+GLuint ind[] = { 0, 1, 2, 3};
+
 void renderScene(void) {
 	// очистка буфера цвета и глубины
-	glClearColor(0.4, 0.4, 0.4,0);
+	glClearColor(0.4, 0.4, 0.4, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// обнуление трансформации
-	glLoadIdentity();
 
-	// установка камеры
-	gluLookAt(1.0f, 0.0f, 15.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f);
+	//glRotatef(2, 0, 0, 1);
 
-	glBegin(GL_TRIANGLES);
-	glVertex3f(-2.0f, -2.0f, 0.0f);
-	glVertex3f(0.0f, 2.0f, 0.0);
-	glVertex3f(2.0f, -2.0f, 0.0);
-	glEnd();
+	//draw triangle
+	glColor3f(1, 0, 0);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, vert);
 
 
-	glutSwapBuffers();qwu difftimeVEOFT987wv6b 8
+	glEnableClientState(GL_INDEX_ARRAY);
+
+	glDrawElements(GL_TRIANGLE_FAN, 4, GL_UNSIGNED_INT, ind);
+
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_INDEX_ARRAY);
+
+
+	glutSwapBuffers();
 }
 
 void init_openGL()
@@ -59,6 +72,12 @@ void init_openGL()
 	glutInitWindowPosition(W_START_X, W_START_Y);
 	glutInitWindowSize(W_WIDTH, W_HEIGHT);
 	glutCreateWindow(W_NAME);
+	glEnable(GL_DEPTH_TEST);
+
+	// установка камеры
+	gluLookAt(0.0f, 0.0f, 5.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f);
 }
 
 int main(int argc, char** argv)
