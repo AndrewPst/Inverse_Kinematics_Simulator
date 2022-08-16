@@ -18,41 +18,77 @@ void changeSize(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);// вернуться к матрице проекции
 }
 
+double anim_c = 0;
+
+void setupCamera()
+{
+	// установка камеры
+	gluLookAt(0.0f, 0.0f, 5.0f,
+		0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f);
+}
 
 GLfloat vert[] = {
+	0, 0, 1,
+	0, 1, 1,
+	1, 1, 1,
+	1, 0, 1,
 	0, 0, 0,
 	0, 1, 0,
 	1, 1, 0,
 	1, 0, 0
 };
-//GLfloat colors[] = { 1, 0, 0, 0,1, 0, 0, 0, 1, 1, 1, 0 };
-GLuint ind[] = { 0, 1, 2, 3};
+
+GLfloat colors[] = {
+	0, 0, 1,
+	0, 1, 0,
+	0, 1, 1,
+	1, 0, 0,
+	1, 0, 1,
+	1, 1, 0,
+	1, 1, 1,
+	0, 0, 0
+};
+
+GLushort ind[] = {
+	0, 3, 2, 1,
+	0, 1, 5, 4,
+	7, 4, 5, 6,
+	3, 7, 6, 2,
+	1, 2, 6, 5,
+	0, 4, 7, 3
+};
 
 void renderScene(void) {
 	// очистка буфера цвета и глубины
 	glClearColor(0.4, 0.4, 0.4, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	// обнуление трансформации
+	glLoadIdentity();
+	setupCamera();
+	glRotatef(anim_c, 0, 1, 0);
 
-	//glRotatef(2, 0, 0, 1);
-
-	//draw triangle
-	glColor3f(1, 0, 0);
+	//draw cube
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, vert);
 
+	glEnableClientState(GL_COLOR_ARRAY);
+	glColorPointer(3, GL_FLOAT, 0, colors);
 
 	glEnableClientState(GL_INDEX_ARRAY);
 
-	glDrawElements(GL_TRIANGLE_FAN, 4, GL_UNSIGNED_INT, ind);
-
+	glDrawElements(GL_QUADS, 24, GL_UNSIGNED_SHORT, ind);
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_INDEX_ARRAY);
 
+	anim_c += 1;
 
 	glutSwapBuffers();
 }
+
+
 
 void init_openGL()
 {
@@ -73,11 +109,10 @@ void init_openGL()
 	glutInitWindowSize(W_WIDTH, W_HEIGHT);
 	glutCreateWindow(W_NAME);
 	glEnable(GL_DEPTH_TEST);
+	glShadeModel(GL_FLAT);
+	glEnable(GL_CULL_FACE);
 
-	// установка камеры
-	gluLookAt(0.0f, 0.0f, 5.0f,
-		0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f);
+	setupCamera();
 }
 
 int main(int argc, char** argv)
