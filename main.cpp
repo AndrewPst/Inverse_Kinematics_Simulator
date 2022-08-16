@@ -4,6 +4,8 @@
 #include <GL/freeglut.h>
 #include "WindowConfig.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 //Функция сохранения пропорций окна при масштабировании
 void changeSize(int w, int h) {
@@ -18,15 +20,88 @@ void changeSize(int w, int h) {
 	glMatrixMode(GL_MODELVIEW);// вернуться к матрице проекции
 }
 
-double anim_c = 0;
+constexpr float CAMERA_SPEED = 0.02;
+
+float camera_speed_l = 0;
+float camera_pos_l = 5.f;
+
+void pressKey(int key, int xx, int yy)
+{
+	switch (key) {
+	case GLUT_KEY_UP:
+		camera_speed_l = -CAMERA_SPEED;
+		break;
+	case GLUT_KEY_DOWN:
+		camera_speed_l = CAMERA_SPEED;
+		break;
+	}
+}
+
+void releaseKey(int key, int xx, int yy)
+{
+	switch (key) {
+	case GLUT_KEY_UP:
+		camera_speed_l = 0;
+		break;
+	case GLUT_KEY_DOWN:
+		camera_speed_l = 0;
+		break;
+	}
+}
+
+
+float angle_y = M_PI ;
+float angle_x = 0;
+int xOrigin = -1, yOrigin = -1;
+
+void mauseButton(int button, int state, int x, int y)
+{
+	if (button == GLUT_LEFT_BUTTON)
+	{
+		if (state == GLUT_UP) {
+			xOrigin = -1;
+			yOrigin = -1;
+		}
+		else {
+			xOrigin = x;
+			yOrigin = y;
+		}
+	}
+}
+
+void mauseMoveButton(int x, int y)
+{
+	if (xOrigin >= 0) {
+
+		// update deltaAngle
+		angle_y += (x - xOrigin) * 0.005f;
+		xOrigin = x;
+	}
+	if (yOrigin >= 0) {
+		angle_x += (y - yOrigin) * 0.005f;
+		yOrigin = y;
+	}
+}
+
 
 void setupCamera()
 {
+	camera_pos_l += camera_speed_l;
+	float _x = 0, _z = -camera_pos_l, _y = 0;
+	float _nx, _ny, _nz;
+	_ny = _y * cos(angle_x) - _z * sin(angle_x);
+	_nz = _y * sin(angle_x) + _z * cos(angle_x);
+
+	_nx = _x * cos(angle_y) - _nz * sin(angle_y);
+	_nz = _x * sin(angle_y) + _nz * cos(angle_y);
+
 	// установка камеры
-	gluLookAt(0.0f, 0.0f, 5.0f,
+	gluLookAt(_nx, _ny, _nz,
 		0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f);
 }
+
+
 
 GLfloat vert[] = {
 	0, 0, 1,
@@ -59,6 +134,8 @@ GLushort ind[] = {
 	0, 4, 7, 3
 };
 
+double anim_c = 0;
+
 void renderScene(void) {
 	// очистка буфера цвета и глубины
 	glClearColor(0.4, 0.4, 0.4, 0);
@@ -67,9 +144,18 @@ void renderScene(void) {
 	// обнуление трансформации
 	glLoadIdentity();
 	setupCamera();
-	glRotatef(anim_c, 0, 1, 0);
 
-	//draw cube
+
+	//---draw 1 cube-----
+	glPushMatrix();
+
+	glRotatef(anim_c, 0, 0, 1);
+	glTranslatef(-2, 0, 0);
+	glRotatef(-anim_c, 0, 0, 1);
+	glRotatef(-sin(anim_c*0.01)*180/M_PI*10, 1, 1, 1);
+	glTranslatef(-0.5, -0.5, -0.5);
+
+
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, vert);
 
@@ -82,6 +168,27 @@ void renderScene(void) {
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_INDEX_ARRAY);
+	glPopMatrix();
+
+	//-----draw 2 cube--------
+	glPushMatrix();
+	//glRotatef(-anim_c, 0, 1, 0);
+	glTranslatef(-0.5, -0.5, -0.5);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, vert);
+
+	glColor3f(0.5, 0.5, 0.5);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glColorPointer(3, GL_FLOAT, 0, colors);
+
+	glEnableClientState(GL_INDEX_ARRAY);
+
+	glDrawElements(GL_QUADS, 24, GL_UNSIGNED_SHORT, ind);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_INDEX_ARRAY);
+	glPopMatrix();
 
 	anim_c += 1;
 
@@ -115,17 +222,28 @@ void init_openGL()
 	setupCamera();
 }
 
+void registerGlcallbacks()
+{
+	// регистрация
+	glutDisplayFunc(renderScene);
+	glutReshapeFunc(changeSize);
+	glutSpecialFunc(pressKey);
+
+	glutIgnoreKeyRepeat(1);
+	glutSpecialUpFunc(releaseKey);
+
+	glutMouseFunc(mauseButton);
+	glutMotionFunc(mauseMoveButton);
+
+	glutIdleFunc(renderScene);
+}
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	init_openGL();
+	registerGlcallbacks();
 
-	// регистрация
-	glutDisplayFunc(renderScene);
-	glutReshapeFunc(changeSize);
-
-	// новая функция для регистрации
-	glutIdleFunc(renderScene);
 
 	// основной цикл
 	glutMainLoop();
